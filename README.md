@@ -3,4 +3,7 @@
   <ul>
     <li>Disk Space
     <li>File Server Features
+    <li>Hyper-V
+    <li>DFS-R Schedules
+    <li>Scheduled tasks
   </ul>
