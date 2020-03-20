@@ -26,8 +26,8 @@ ForEach($Computer in $Computers){
     # Error handling, duh
     Catch{
         $ErrorArray += [PSCustomObject]@{
-            "Computer Name" = $Computer
-            "Error" = $_.Exception.Message
+            "Computer" = $Computer
+            "Error"    = $_.Exception.Message
         }
     }
 
@@ -41,11 +41,11 @@ ForEach($Computer in $Computers){
             ForEach($PartComponent in $GroupMember.PartComponent){
                 # Output matches to custom object
                 $MemberArray += [PSCustomObject]@{
-                    "Computer" = $GroupMember.PSComputerName
-                    "Member of" = $GroupMember.GroupComponent.Name
+                    "Computer"  = $GroupMember.PSComputerName
+                    "Member Of" = $GroupMember.GroupComponent.Name
                     "Full Name" = ("" + $PartComponent.Domain + "\" + $PartComponent.Name)
-                    "Domain" = $PartComponent.Domain
-                    "Name" = $PartComponent.Name
+                    "Domain"    = $PartComponent.Domain
+                    "Name"      = $PartComponent.Name
                 }
             }
         }
