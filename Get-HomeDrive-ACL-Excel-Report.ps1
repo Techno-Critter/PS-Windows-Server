@@ -76,14 +76,21 @@ Else{
     ForEach($User in $UserProps){
         $ACLMisMatch = $true
         $OwnerMisMatch = $true
+        $FolderNameMismatch = $true
         If($null -ne $User.HomeDirectory){
             If(Test-Path $User.HomeDirectory){
                 $Access = Get-NTFSAccess -Path $User.HomeDirectory -ExcludeInherited
                 $Owner = Get-NTFSOwner -Path $User.HomeDirectory
                 $Inherited = Get-NTFSInheritance -Path $User.HomeDirectory
 
+                # Verify owner of folder is assigned user
                 If($User.SID -eq $Owner.Owner.Sid){
                     $OwnerMisMatch = $false
+                }
+
+                # Verify home folder name matches user account name (not case sensitive)
+                If($User.SamAccountName -eq (($User.HomeDirectory).Split("\\")[-1])){
+                    $FolderNameMismatch = $false
                 }
 
                 # List each AD object with explicit permissions and what permissions are granted
@@ -103,8 +110,10 @@ Else{
 
                 $UserHomeArray += [PSCustomObject]@{
                     "Name"                 = $User.Name
+                    "Account Name"         = $User.SamAccountName
                     "Enabled"              = $User.Enabled
                     "Drive"                = $User.HomeDrive
+                    "FolderNameMismatch"   = $FolderNameMismatch
                     "Path"                 = $User.HomeDirectory
                     "Explicit Permissions" = $Access.Account.AccountName -join ", "
                     "Inherit Permissions"  = $Inherited.AccessInheritanceEnabled
@@ -125,9 +134,11 @@ Else{
         Else{
             $UserHomeArray += [PSCustomObject]@{
                 "Name"                 = $User.Name
+                "Account Name"         = $User.SamAccountName
                 "Enabled"              = $User.Enabled
                 "Drive"                = "N/A"
                 "Path"                 = "N/A"
+                "FolderNameMismatch"   = "N/A"
                 "Explicit Permissions" = "N/A"
                 "Inherit Permissions"  = "N/A"
                 "Folder Owner"         = "N/A"
@@ -144,9 +155,10 @@ Else{
     $UserHeaderRow = "`$A`$1:`$$UserHomeHeaderCount`$1"
     $UserSheetLastRow = ($UserHomeArray | Measure-Object).Count + 1
     If($UserSheetLastRow -gt 1){
-        $UserEnabledColumn = "`$B`$2:`$B`$$UserSheetLastRow"
-        $UserPermissionsColumn = "`$F`$2:`$F`$$UserSheetLastRow"
-        $UserOwnerColumn = "`$G`$2:`$G`$$UserSheetLastRow"
+        $UserEnabledColumn = "`$C`$2:`$C`$$UserSheetLastRow"
+        $FolderMismatchColumn = "`$D`$2:`$D`$$UserSheetLastRow"
+        $UserPermissionsColumn = "`$H`$2:`$H`$$UserSheetLastRow"
+        $UserOwnerColumn = "`$I`$2:`$I`$$UserSheetLastRow"
 
         # Format style for User sheet
         $UserSheetStyle = @()
@@ -155,8 +167,9 @@ Else{
         # Format conditions for User sheet
         $UserSheetConditionalText = @()
         $UserSheetConditionalText += New-ConditionalText -Range $UserEnabledColumn -ConditionalType ContainsText "FALSE" -ConditionalTextColor Maroon -BackgroundColor Pink
-        $UserSheetConditionalText += New-ConditionalText -Range $UserPermissionsColumn -ConditionalType Expression "=AND(`$H2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
-        $UserSheetConditionalText += New-ConditionalText -Range $UserOwnerColumn -ConditionalType Expression "=AND(`$I2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
+        $UserSheetConditionalText += New-ConditionalText -Range $FolderMismatchColumn -ConditionalType ContainsText "TRUE" -ConditionalTextColor Maroon -BackgroundColor Pink
+        $UserSheetConditionalText += New-ConditionalText -Range $UserPermissionsColumn -ConditionalType Expression "=AND(`$J2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
+        $UserSheetConditionalText += New-ConditionalText -Range $UserOwnerColumn -ConditionalType Expression "=AND(`$K2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
 
         $UserHomeArray | Export-Excel -Path $LogFile  -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "User Homes" -ConditionalText $UserSheetConditionalText -Style $UserSheetStyle
     }
