@@ -60,14 +60,14 @@ If(Test-Connection $Computer -Quiet){
             @{Name = 'SystemDrive'; Expression = {$SysDrive}}
     }
 
-    Write $WriteLine
-    Write-Host("Drive properties for computer: " + $Computer) -ForegroundColor Green
-    Write $WriteLine
-    $DriveList | FT
-    Write $WriteLine
+    Write-Output $WriteLine
+    Write-Output("Drive properties for computer: " + $Computer)
+    Write-Output $WriteLine
+    $DriveList | Format-Table
+    Write-Output $WriteLine
 }
 Else{
-    Write $WriteLine
-    Write ("Computer " + $Computer + " is not available. Script is terminated.")
-    Write $WriteLine
+    Write-Output $WriteLine
+    Write-Output ("Computer " + $Computer + " is not available. Script is terminated.")
+    Write-Output $WriteLine
 }
