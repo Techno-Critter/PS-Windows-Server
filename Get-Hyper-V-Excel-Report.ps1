@@ -33,7 +33,8 @@ If(Test-Path $LogFile){
 Else{
 #endregion
 
-#region Function: Change data sizes to legible values; converts number to string
+#region Functions
+# Change data sizes to legible values; converts number to string
     Function Get-Size($FSize){
         Switch($Fsize){
             {$_ -lt 1KB}{
@@ -57,7 +58,50 @@ Else{
         }
         $FValue
     }
-#endregion
+
+# Convert number of object items into Excel column headers
+    Function Get-ColumnName ([int]$ColumnCount){
+        If(($ColumnCount -le 702) -and ($ColumnCount -ge 1)){
+            $ColumnCount = [Math]::Floor($ColumnCount)
+            $CharStart = 64
+            $FirstCharacter = $null
+
+            # Convert number into double letter column name (AA-ZZ)
+            If($ColumnCount -gt 26){
+                $FirstNumber = [Math]::Floor(($ColumnCount)/26)
+                $SecondNumber = ($ColumnCount) % 26
+
+                # Reset increment for base-26
+                If($SecondNumber -eq 0){
+                    $FirstNumber--
+                    $SecondNumber = 26
+                }
+
+                # Left-side column letter (first character from left to right)
+                $FirstLetter = [int]($FirstNumber + $CharStart)
+                $FirstCharacter = [char]$FirstLetter
+
+                # Right-side column letter (second character from left to right)
+                $SecondLetter = $SecondNumber + $CharStart
+                $SecondCharacter = [char]$SecondLetter
+
+                # Combine both letters into column name
+                $CharacterOutput = $FirstCharacter + $SecondCharacter
+            }
+
+            # Convert number into single letter column name (A-Z)
+            Else{
+                $CharacterOutput = [char]($ColumnCount + $CharStart)
+            }
+        }
+        Else{
+            $CharacterOutput = "ZZ"
+        }
+
+        # Output column name
+        $CharacterOutput
+    }
+    #endregion
 
 #region Prepare script
 # Import modules
@@ -139,7 +183,7 @@ Else{
                     }
 #endregion
 
-# Host hard drives
+#region Host hard drives
                                                                 ForEach($HostHD in $HostHardDrives){
                     $HostHDArray += [PSCustomObject]@{
                         "Host Name" = $Server.Name
@@ -151,8 +195,9 @@ Else{
                     $HostTotalHDSpace += $HostHD.Size
                     $HostTotalHDFreeSpace += $HostHD.FreeSpace
                 }
+#Endregion
 
-# Virtual Machines
+#region Virtual Machines
                     ForEach($VirtualMachine in $VirtualMachines){
 # Reset VM variables
                         $TotHDSpace = 0
@@ -227,8 +272,9 @@ Else{
                         $TotalVMAllocatedRAM += $VMMemory.Startup
                         $TotalVMAllocatedHDSpace += $TotHDSpace
                     }
+#endregion
 
-# Host Properties
+#region Host Properties
                     $HostArray += [PSCustomObject]@{
                         "Host Name"      = $Server.Name
                         "Host IP"        = $HostADProps.IPv4Address
@@ -254,7 +300,9 @@ Else{
                         "Time Zone"      = $TimeZone.Caption
                         "VM Drive Path"  = $HostHyperVProps.VirtualHardDiskPath
                         "VM Config Path" = $HostHyperVProps.VirtualMachinePath
+                        "AD Description" = $Server.Description
                     }
+#endregion
                 }
             }
             Catch{
@@ -272,83 +320,96 @@ Else{
         }
     }
 
-# Export to file
-    $HeaderRow = ("!`$A`$1:`$ZZ`$1")
-
+#region Export to file
 # Hosts sheet
     $HostArrayLastRow = ($HostArray | Measure-Object).Count + 1
     If($HostArrayLastRow -gt 1){
+        $HostArrayHeaderCount = Get-ColumnName ($HostArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $HostArrayHeaderRow = "`$A`$1:`$$HostArrayHeaderCount`$1"
         $HostArrayPctFreeColumn = "'HypV Hosts'!`$L`$2:`$L`$$HostArrayLastRow"
         $HostArrayStyle = @()
-        $HostArrayStyle += New-ExcelStyle -Range "'HypV Hosts'$HeaderRow" -HorizontalAlignment Center
+        $HostArrayStyle += New-ExcelStyle -Range "'HypV Hosts'$HostArrayHeaderRow" -HorizontalAlignment Center
         $HostArrayStyle += New-ExcelStyle -Range $HostArrayPctFreeColumn -NumberFormat '0.00%'
         $TotalVMsColumn = "'HypV Hosts'!`$N`$2:`$N`$$HostArrayLastRow"
         $TotalVMsRunningColumn = "'HypV Hosts'!`$O`$2:`$O`$$HostArrayLastRow"
         $HostArray | Sort-Object "Host Name" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "HypV Hosts" -Style $HostArrayStyle -ConditionalText $(
             New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
-            New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.20 -ConditionalTextColor Brown -BackgroundColor Wheat
-            New-ConditionalText -Range $TotalVMsColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Brown -BackgroundColor Wheat
+            New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.20 -ConditionalTextColor Brown -BackgroundColor Goldenrod
+            New-ConditionalText -Range $TotalVMsColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Brown -BackgroundColor Goldenrod
             New-ConditionalText -Range $TotalVMsRunningColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Maroon -BackgroundColor Pink
         )
     }
 
 # Host CPU sheet
-    $HostCPUArrayStyle = New-ExcelStyle -Range "'Host CPU'$HeaderRow" -HorizontalAlignment Center    
+    $HostCPUHeaderCount = Get-ColumnName ($HostCPUArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $HostCPUHeaderRow = "`$A`$1:`$$HostCPUHeaderCount`$1"
+    $HostCPUArrayStyle = New-ExcelStyle -Range "'Host CPU'$HostCPUHeaderRow" -HorizontalAlignment Center    
     $HostCPUArray | Sort-Object "Host Name","Socket" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host CPU" -Style $HostCPUArrayStyle
 
 # Host RAM sheet
-    $HostRAMArrayStyle = New-ExcelStyle -Range "'Host RAM'$HeaderRow" -HorizontalAlignment Center
+    $HostRAMHeaderCount = Get-ColumnName ($HostRAMArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+    $HostRAMHeaderRow = "`$A`$1:`$$HostRAMHeaderCount`$1"
+    $HostRAMArrayStyle = New-ExcelStyle -Range "'Host RAM'$HostRAMHeaderRow" -HorizontalAlignment Center
     $HostRAMArray | Sort-Object "Host Name","RAM Bank" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host RAM" -Style $HostRAMArrayStyle
 
 # Host HD sheet
     $HostHDArrayLastRow = ($HostHDArray | Measure-Object).Count + 1
     If($HostHDArrayLastRow -gt 1){
+        $HostHDHeaderCount = Get-ColumnName ($HostHDArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $HostHDHeaderRow = "`$A`$1:`$$HostHDHeaderCount`$1"
         $PctFreeColumn = "'Host HD'!`$E`2:`$E`$$HostHDArrayLastRow"
         $HostHDArrayStyle = @()
-        $HostHDArrayStyle += New-ExcelStyle -Range "'Host HD'$HeaderRow" -HorizontalAlignment Center
+        $HostHDArrayStyle += New-ExcelStyle -Range "'Host HD'$HostHDHeaderRow" -HorizontalAlignment Center
         $HostHDArrayStyle += New-ExcelStyle -Range $PctFreeColumn -NumberFormat '0.00%'
         $HostHDArray | Sort-Object "Host Name","Drive" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host HD" -Style $HostHDArrayStyle -ConditionalText $(
             New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
-            New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.20 -ConditionalTextColor Brown -BackgroundColor Wheat
+            New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.20 -ConditionalTextColor Brown -BackgroundColor Goldenrod
         )
     }
 
 # VM sheet
     $VMArrayLastRow = ($VMArray | Measure-Object).Count + 1
-    $VMArrayStyle = New-ExcelStyle -Range "'VMs'$HeaderRow" -HorizontalAlignment Center
     If($VMArrayLastRow -gt 1){
+        $VMArrayHeaderCount = Get-ColumnName ($VMArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $VMArrayHeaderRow = "`$A`$1:`$$VMArrayHeaderCount`$1"
         $VMStateColumn = "VMs!`$B`$2:`$B`$$VMArrayLastRow"
         $VMProcColumn = "VMs!`$F`$2:`$F`$$VMArrayLastRow"
         $VMRAMColumn = "VMs!`$H`$2:`$H`$$VMArrayLastRow"
         $VMDynamicRAMColumn = "VMs!`$I`$2:`$I`$$VMArrayLastRow"
         $VMSnapshotColumn = "VMs!`$T`$2:`$T`$$VMArrayLastRow"
-        $VMArray | Sort-Object "Host Name","VM" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "VMs" -Style $VMArrayStyle -ConditionalText $(
-            New-ConditionalText -Range $VMStateColumn -ConditionalType ContainsText "Off" -ConditionalTextColor Brown -BackgroundColor Wheat
-            New-ConditionalText -Range $VMProcColumn -ConditionalType NotEqual 2 -ConditionalTextColor Brown -BackgroundColor Wheat
-            New-ConditionalText -Range $VMRAMColumn -ConditionalType NotContainsText "4.00 GiB" -ConditionalTextColor Brown -BackgroundColor Wheat
-            New-ConditionalText -Range $VMDynamicRAMColumn -ConditionalType NotContainsText "False" -ConditionalTextColor Brown -BackgroundColor Wheat
-            New-ConditionalText -Range $VMSnapshotColumn -ConditionalType GreaterThan 0 -ConditionalTextColor Brown -BackgroundColor Wheat
-        )
+        $VMArrayStyle = New-ExcelStyle -Range "'VMs'$VMArrayHeaderRow" -HorizontalAlignment Center
+        $VMArrayConditionalText = @()
+        $VMArrayConditionalText += New-ConditionalText -Range $VMStateColumn -ConditionalType ContainsText "Off" -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMArrayConditionalText += New-ConditionalText -Range $VMProcColumn -ConditionalType NotEqual 2 -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMArrayConditionalText += New-ConditionalText -Range $VMRAMColumn -ConditionalType NotContainsText "4.00 GiB" -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMArrayConditionalText += New-ConditionalText -Range $VMDynamicRAMColumn -ConditionalType NotContainsText "False" -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMArrayConditionalText += New-ConditionalText -Range $VMSnapshotColumn -ConditionalType GreaterThan 0 -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMArray | Sort-Object "Host Name","VM" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "VMs" -Style $VMArrayStyle -ConditionalText $VMArrayConditionalText
     }
 
 # VM HD sheet
     $VMHDArrayLastRow = ($VMHDArray | Measure-Object).Count + 1
-    $VMHDUsedColumn = "'VM HDs'!`$E`$2:`$E`$$VMHDArrayLastRow"
-    $VMHDTypeColumn = "'VM HDs'!`$M`$2:`$M`$$VMHDArrayLastRow"
-    $VMHDArrayStyle = @()
-    $VMHDArrayStyle += New-ExcelStyle -Range "'VM HDs'$HeaderRow" -HorizontalAlignment Center
-    $VMHDArrayStyle += New-ExcelStyle -Range $VMHDUsedColumn -NumberFormat "0.00%"
     If($VMHDArrayLastRow -gt 1){
-        $VMHDArray | Sort-Object "Host Name","VM","HD File Path" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "VM HDs" -Style $VMHDArrayStyle -ConditionalText $(
-            New-ConditionalText -Range $VMHDUsedColumn -ConditionalType GreaterThanOrEqual 0.90 -ConditionalTextColor Maroon -BackgroundColor Pink
-            New-ConditionalText -Range $VMHDUsedColumn -ConditionalType GreaterThanOrEqual 0.80 -ConditionalTextColor Brown -BackgroundColor Wheat
-            New-ConditionalText -Range $VMHDTypeColumn -ConditionalType NotContainsText "Dynamic" -ConditionalTextColor Brown -BackgroundColor Wheat
-        )
+        $VMHDHeaderCount = Get-ColumnName ($VMHDArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $VMHDHeaderRow = "`$A`$1:`$$VMHDHeaderCount`$1"
+        $VMHDUsedColumn = "'VM HDs'!`$E`$2:`$E`$$VMHDArrayLastRow"
+        $VMHDTypeColumn = "'VM HDs'!`$M`$2:`$M`$$VMHDArrayLastRow"
+        $VMHDArrayStyle = @()
+        $VMHDArrayStyle += New-ExcelStyle -Range "'VM HDs'$VMHDHeaderRow" -HorizontalAlignment Center
+        $VMHDArrayStyle += New-ExcelStyle -Range $VMHDUsedColumn -NumberFormat "0.00%"
+        $VMHDArrayConditionalText = @()
+        $VMHDArrayConditionalText += New-ConditionalText -Range $VMHDUsedColumn -ConditionalType GreaterThanOrEqual 0.90 -ConditionalTextColor Maroon -BackgroundColor Pink
+        $VMHDArrayConditionalText += New-ConditionalText -Range $VMHDUsedColumn -ConditionalType GreaterThanOrEqual 0.80 -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMHDArrayConditionalText += New-ConditionalText -Range $VMHDTypeColumn -ConditionalType NotContainsText "Dynamic" -ConditionalTextColor Brown -BackgroundColor Goldenrod
+        $VMHDArray | Sort-Object "Host Name","VM","HD File Path" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "VM HDs" -Style $VMHDArrayStyle -ConditionalText $VMHDArrayConditionalText
     }
 
     # Error sheet
     If($ErrorArray){
-        $ErrorArrayStyle = New-ExcelStyle -Range "'Errors'$HeaderRow" -HorizontalAlignment Center
+        $ErrorHeaderCount = Get-ColumnName ($ErrorArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $ErrorHeaderRow = "`$A`$1:`$$ErrorHeaderCount`$1"
+        $ErrorArrayStyle = New-ExcelStyle -Range "'Errors'$ErrorHeaderRow" -HorizontalAlignment Center
         $ErrorArray | Sort-Object "Host Name" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Errors" -Style $ErrorArrayStyle
     }
+#endregion
 }
