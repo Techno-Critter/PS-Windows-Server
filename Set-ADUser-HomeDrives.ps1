@@ -9,7 +9,7 @@ set the ownership to the user account.
 #>
 
 $ADLocation = "OU=Users,DC=ACME,DC=COM"
-$HomeDirectory = "\\ACME.COM\"
+$HomeDirectory = "\\ACME.COM\Home_Folders"
 $HomeDrive = "H:"
 $Domain = "ACME"
 
