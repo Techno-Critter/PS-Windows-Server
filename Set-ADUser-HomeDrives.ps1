@@ -2,7 +2,7 @@
 Author: Stan Crider
 Date: 17April2020
 Crap: Assigns home directories for users in specified OU. This will also
-set the permissions on the  folder to "modify" for the user account with
+set the permissions on the folder to "modify" for the user account with
 inheritanc and set the ownership to the user account. If folder does not
 exist it will be created.
 ### Must have NTFSSecurity module installed!!!
