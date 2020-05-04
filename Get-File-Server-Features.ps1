@@ -11,6 +11,20 @@ $Date = Get-Date -Format yyyyMMdd
 $LogFile = "C:\Reports\File Servers\File_Servers_$Date.xlsx"
 $ADGroup = "CN=ServerGroup,DC=ACME,DC=COM"
 
+# Exclude default shares based on names and descriptions
+$ShareNameExclusions = "SMS_DP$",
+    "SMSPKGD$",
+    "SMSPKGE$",
+    "SCCMContentLib$",
+    "SMSSIG$",
+    "MTATempStore$",
+    "print$",
+    "prnproc$"
+$ShareDescriptionExclusions = "Default share",
+    "Remote IPC",
+    "Remote Admin",
+    "RemoteInstallation"
+
 ## Functions
 #Convert drive sizes to legible strings
 Function Get-Size([double]$DataSize) {
@@ -91,20 +105,6 @@ Else {
     $ServerDriveArray = @()
     $ServerShareArray = @()
     $ErrorArray = @()
-
-    # Exclude default shares based on names and descriptions
-    $ShareDescriptionExclusions = "Default share",
-        "Remote IPC",
-        "Remote Admin",
-        "RemoteInstallation"
-    $ShareNameExclusions = "SMS_DP$",
-        "SMSPKGD$",
-        "SMSPKGE$",
-        "SCCMContentLib$",
-        "SMSSIG$",
-        "MTATempStore$",
-        "print$",
-        "prnproc$"
 
     # Search through list
     ForEach ($Member in $ServerList) {
