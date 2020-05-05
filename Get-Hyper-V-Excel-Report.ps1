@@ -327,17 +327,17 @@ Else{
         $HostArrayHeaderCount = Get-ColumnName ($HostArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
         $HostArrayHeaderRow = "`$A`$1:`$$HostArrayHeaderCount`$1"
         $HostArrayPctFreeColumn = "'HypV Hosts'!`$L`$2:`$L`$$HostArrayLastRow"
+        $TotalVMsColumn = "'HypV Hosts'!`$N`$2:`$N`$$HostArrayLastRow"
+        $TotalVMsRunningColumn = "'HypV Hosts'!`$O`$2:`$O`$$HostArrayLastRow"
         $HostArrayStyle = @()
         $HostArrayStyle += New-ExcelStyle -Range "'HypV Hosts'$HostArrayHeaderRow" -HorizontalAlignment Center
         $HostArrayStyle += New-ExcelStyle -Range $HostArrayPctFreeColumn -NumberFormat '0.00%'
-        $TotalVMsColumn = "'HypV Hosts'!`$N`$2:`$N`$$HostArrayLastRow"
-        $TotalVMsRunningColumn = "'HypV Hosts'!`$O`$2:`$O`$$HostArrayLastRow"
-        $HostArray | Sort-Object "Host Name" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "HypV Hosts" -Style $HostArrayStyle -ConditionalText $(
-            New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
-            New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.20 -ConditionalTextColor Brown -BackgroundColor Goldenrod
-            New-ConditionalText -Range $TotalVMsColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Brown -BackgroundColor Goldenrod
-            New-ConditionalText -Range $TotalVMsRunningColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Maroon -BackgroundColor Pink
-        )
+        $HostArrayConditionalText = @()
+        $HostArrayConditionalText += New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
+        $HostArrayConditionalText += New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.20 -ConditionalTextColor Brown -BackgroundColor Wheat
+        $HostArrayConditionalText += New-ConditionalText -Range $TotalVMsColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Brown -BackgroundColor Wheat
+        $HostArrayConditionalText += New-ConditionalText -Range $TotalVMsRunningColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Maroon -BackgroundColor Pink
+        $HostArray | Sort-Object "Host Name" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "HypV Hosts" -Style $HostArrayStyle -ConditionalText $HostArrayConditionalText
     }
 
 # Host CPU sheet
@@ -361,10 +361,10 @@ Else{
         $HostHDArrayStyle = @()
         $HostHDArrayStyle += New-ExcelStyle -Range "'Host HD'$HostHDHeaderRow" -HorizontalAlignment Center
         $HostHDArrayStyle += New-ExcelStyle -Range $PctFreeColumn -NumberFormat '0.00%'
-        $HostHDArray | Sort-Object "Host Name","Drive" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host HD" -Style $HostHDArrayStyle -ConditionalText $(
-            New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
-            New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.20 -ConditionalTextColor Brown -BackgroundColor Goldenrod
-        )
+        $HostHDArrayConditionalText = @()
+        $HostHDArrayConditionalText += New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
+        $HostHDArrayConditionalText += New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.20 -ConditionalTextColor Brown -BackgroundColor Wheat
+        $HostHDArray | Sort-Object "Host Name","Drive" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host HD" -Style $HostHDArrayStyle -ConditionalText $HostHDArrayConditionalText
     }
 
 # VM sheet
