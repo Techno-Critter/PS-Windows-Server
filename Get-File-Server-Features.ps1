@@ -141,6 +141,7 @@ Else {
                         "FSRM"           = ($Features | Where-Object { $_.Name -eq "FS-Resource-Manager" }).InstallState
                         "Search Service" = ($Features | Where-Object { $_.Name -eq "Search-Service" }).InstallState
                         "DHCP"           = ($Features | Where-Object {$_.Name -eq "DHCP"}).InstallState
+                        "Description"    = $Server.Description
                     }
                 }
             }
@@ -255,6 +256,7 @@ Else {
                 "FSRM"           = "N/A"
                 "Search Service" = "N/A"
                 "DHCP"           = "N/A"
+                "Description"    = $Server.Description
             }
         }
     }
