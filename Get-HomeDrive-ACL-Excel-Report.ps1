@@ -151,10 +151,10 @@ Else{
     ### Output to Excel
     ## UserHome worksheet
     # Call Excel column count function based on number of NoteProperty members in UserHomeArray
-    $UserHomeHeaderCount = Get-ColumnName ($UserHomeArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-    $UserHeaderRow = "`$A`$1:`$$UserHomeHeaderCount`$1"
     $UserSheetLastRow = ($UserHomeArray | Measure-Object).Count + 1
     If($UserSheetLastRow -gt 1){
+        $UserHomeHeaderCount = Get-ColumnName ($UserHomeArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $UserHeaderRow = "`$A`$1:`$$UserHomeHeaderCount`$1"
         $UserEnabledColumn = "`$C`$2:`$C`$$UserSheetLastRow"
         $FolderMismatchColumn = "`$D`$2:`$D`$$UserSheetLastRow"
         $UserPermissionsColumn = "`$H`$2:`$H`$$UserSheetLastRow"
@@ -175,10 +175,10 @@ Else{
     }
     ## Permissions worksheet
     # Call Excel column count function based on number of NoteProperty members in PermissionsArray
-    $PermissionsHeaderCount = Get-ColumnName ($PermissionsArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
-    $PermissionsHeaderRow = "`$A`$1:`$$PermissionsHeaderCount`$1"
     $PermissionsSheetLastRow = ($PermissionsArray | Measure-Object).Count + 1
     If($PermissionsSheetLastRow -gt 1){
+        $PermissionsHeaderCount = Get-ColumnName ($PermissionsArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
+        $PermissionsHeaderRow = "`$A`$1:`$$PermissionsHeaderCount`$1"
         $PermissionsRightsColumn = "`$D`$2:`$D`$$PermissionsSheetLastRow"
         $PermissionsInheritedColumn = "`$F`$2:`$F`$$PermissionsSheetLastRow"
 
