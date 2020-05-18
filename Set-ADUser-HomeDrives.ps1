@@ -7,12 +7,16 @@ inheritance and set the ownership to the user account. If folder does not
 exist it will be created.
 #>
 
+## Set variables
 $ADLocation = "OU=Users,DC=ACME,DC=COM"
 $HomeDirectory = "\\ACME.COM\Home_Folders"
 $HomeDrive = "H:"
 $Domain = "ACME"
+# Exclude SAMAccountNames from creating or overwriting existing home directories; set to null if not used
+$CreationExceptions = "Bob.Smith","Printer.ServiceAccount"
 
-$ADUsers = Get-ADUser -Filter * -SearchBase $ADLocation -Properties HomeDirectory,HomeDrive,SamAccountName,SID
+## Script below
+$ADUsers = Get-ADUser -Filter * -SearchBase $ADLocation -Properties HomeDirectory,HomeDrive,SamAccountName,SID | Where-Object{$_.SamAccountName -notin $CreationExceptions}| Sort-Object SamAccountName
 
 $UserPermissions = [System.Security.AccessControl.FileSystemRights]"Modify"
 $Inheritance = [System.Security.AccessControl.InheritanceFlags]::"ContainerInherit", "ObjectInherit"
