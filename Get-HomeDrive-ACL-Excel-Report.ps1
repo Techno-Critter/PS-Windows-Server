@@ -149,6 +149,15 @@ Else{
     }
 
     ### Output to Excel
+    ## Create Excel standard configuration properties
+    $ExcelProps = @{
+        Autosize = $true;
+        FreezeTopRow = $true;
+        BoldTopRow = $true;
+    }
+
+    $ExcelProps.Path = $LogFile
+
     ## UserHome worksheet
     # Call Excel column count function based on number of NoteProperty members in UserHomeArray
     $UserSheetLastRow = ($UserHomeArray | Measure-Object).Count + 1
@@ -171,7 +180,7 @@ Else{
         $UserSheetConditionalText += New-ConditionalText -Range $UserPermissionsColumn -ConditionalType Expression "=AND(`$J2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
         $UserSheetConditionalText += New-ConditionalText -Range $UserOwnerColumn -ConditionalType Expression "=AND(`$K2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
 
-        $UserHomeArray | Export-Excel -Path $LogFile  -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "User Homes" -ConditionalText $UserSheetConditionalText -Style $UserSheetStyle
+        $UserHomeArray | Export-Excel @ExcelProps -WorkSheetname "User Homes" -ConditionalText $UserSheetConditionalText -Style $UserSheetStyle
     }
     ## Permissions worksheet
     # Call Excel column count function based on number of NoteProperty members in PermissionsArray
@@ -191,7 +200,7 @@ Else{
         $PermissionsConditionalText += New-ConditionalText -Range $PermissionsRightsColumn -ConditionalType NotContainsText "Modify" -ConditionalTextColor Maroon -BackgroundColor Pink
         $PermissionsConditionalText += New-ConditionalText -Range $PermissionsInheritedColumn -ConditionalType ContainsText "FALSE"  -ConditionalTextColor Maroon -BackgroundColor Pink
 
-        $PermissionsArray | Export-Excel -Path $LogFile  -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "Permissions" -ConditionalText $PermissionsConditionalText -Style $PermissionsStyle
+        $PermissionsArray | Export-Excel @ExcelProps -WorkSheetname "Permissions" -ConditionalText $PermissionsConditionalText -Style $PermissionsStyle
     }
 
     ## Error worksheet
@@ -204,7 +213,7 @@ Else{
             # Format style for Error sheet
             $ErrorStyle = @()
             $ErrorStyle += New-ExcelStyle -Range "'Errors'$ErrorHeaderRow" -HorizontalAlignment Center
-            $ErrorArray | Export-Excel -Path $LogFile  -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "Errors" -Style $ErrorStyle
+            $ErrorArray | Export-Excel @ExcelProps -WorkSheetname "Errors" -Style $ErrorStyle
         }
     }
 }
