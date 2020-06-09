@@ -321,6 +321,15 @@ Else{
     }
 
 #region Export to file
+# Create Excel standard configuration properties
+$ExcelProps = @{
+    Autosize = $true;
+    FreezeTopRow = $true;
+    BoldTopRow = $true;
+}
+
+$ExcelProps.Path = $LogFile
+
 # Hosts sheet
     $HostArrayLastRow = ($HostArray | Measure-Object).Count + 1
     If($HostArrayLastRow -gt 1){
@@ -337,20 +346,20 @@ Else{
         $HostArrayConditionalText += New-ConditionalText -Range $HostArrayPctFreeColumn -ConditionalType LessThan 0.20 -ConditionalTextColor Brown -BackgroundColor Wheat
         $HostArrayConditionalText += New-ConditionalText -Range $TotalVMsColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Brown -BackgroundColor Wheat
         $HostArrayConditionalText += New-ConditionalText -Range $TotalVMsRunningColumn -ConditionalType GreaterThan 2 -ConditionalTextColor Maroon -BackgroundColor Pink
-        $HostArray | Sort-Object "Host Name" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "HypV Hosts" -Style $HostArrayStyle -ConditionalText $HostArrayConditionalText
+        $HostArray | Sort-Object "Host Name" | Export-Excel @ExcelProps -WorksheetName "HypV Hosts" -Style $HostArrayStyle -ConditionalText $HostArrayConditionalText
     }
 
 # Host CPU sheet
     $HostCPUHeaderCount = Get-ColumnName ($HostCPUArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
     $HostCPUHeaderRow = "`$A`$1:`$$HostCPUHeaderCount`$1"
     $HostCPUArrayStyle = New-ExcelStyle -Range "'Host CPU'$HostCPUHeaderRow" -HorizontalAlignment Center    
-    $HostCPUArray | Sort-Object "Host Name","Socket" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host CPU" -Style $HostCPUArrayStyle
+    $HostCPUArray | Sort-Object "Host Name","Socket" | Export-Excel @ExcelProps -WorksheetName "Host CPU" -Style $HostCPUArrayStyle
 
 # Host RAM sheet
     $HostRAMHeaderCount = Get-ColumnName ($HostRAMArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
     $HostRAMHeaderRow = "`$A`$1:`$$HostRAMHeaderCount`$1"
     $HostRAMArrayStyle = New-ExcelStyle -Range "'Host RAM'$HostRAMHeaderRow" -HorizontalAlignment Center
-    $HostRAMArray | Sort-Object "Host Name","RAM Bank" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host RAM" -Style $HostRAMArrayStyle
+    $HostRAMArray | Sort-Object "Host Name","RAM Bank" | Export-Excel @ExcelProps -WorksheetName "Host RAM" -Style $HostRAMArrayStyle
 
 # Host HD sheet
     $HostHDArrayLastRow = ($HostHDArray | Measure-Object).Count + 1
@@ -364,7 +373,7 @@ Else{
         $HostHDArrayConditionalText = @()
         $HostHDArrayConditionalText += New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.10 -ConditionalTextColor Maroon -BackgroundColor Pink
         $HostHDArrayConditionalText += New-ConditionalText -Range $PctFreeColumn -ConditionalType LessThanOrEqual 0.20 -ConditionalTextColor Brown -BackgroundColor Wheat
-        $HostHDArray | Sort-Object "Host Name","Drive" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Host HD" -Style $HostHDArrayStyle -ConditionalText $HostHDArrayConditionalText
+        $HostHDArray | Sort-Object "Host Name","Drive" | Export-Excel @ExcelProps -WorksheetName "Host HD" -Style $HostHDArrayStyle -ConditionalText $HostHDArrayConditionalText
     }
 
 # VM sheet
@@ -384,7 +393,7 @@ Else{
         $VMArrayConditionalText += New-ConditionalText -Range $VMRAMColumn -ConditionalType NotContainsText "4.00 GiB" -ConditionalTextColor Brown -BackgroundColor Wheat
         $VMArrayConditionalText += New-ConditionalText -Range $VMDynamicRAMColumn -ConditionalType NotContainsText "False" -ConditionalTextColor Brown -BackgroundColor Wheat
         $VMArrayConditionalText += New-ConditionalText -Range $VMSnapshotColumn -ConditionalType GreaterThan 0 -ConditionalTextColor Brown -BackgroundColor Wheat
-        $VMArray | Sort-Object "Host Name","VM" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "VMs" -Style $VMArrayStyle -ConditionalText $VMArrayConditionalText
+        $VMArray | Sort-Object "Host Name","VM" | Export-Excel @ExcelProps -WorksheetName "VMs" -Style $VMArrayStyle -ConditionalText $VMArrayConditionalText
     }
 
 # VM HD sheet
@@ -401,7 +410,7 @@ Else{
         $VMHDArrayConditionalText += New-ConditionalText -Range $VMHDUsedColumn -ConditionalType GreaterThanOrEqual 0.90 -ConditionalTextColor Maroon -BackgroundColor Pink
         $VMHDArrayConditionalText += New-ConditionalText -Range $VMHDUsedColumn -ConditionalType GreaterThanOrEqual 0.80 -ConditionalTextColor Brown -BackgroundColor Wheat
         $VMHDArrayConditionalText += New-ConditionalText -Range $VMHDTypeColumn -ConditionalType NotContainsText "Dynamic" -ConditionalTextColor Brown -BackgroundColor Wheat
-        $VMHDArray | Sort-Object "Host Name","VM","HD File Path" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "VM HDs" -Style $VMHDArrayStyle -ConditionalText $VMHDArrayConditionalText
+        $VMHDArray | Sort-Object "Host Name","VM","HD File Path" | Export-Excel @ExcelProps -WorksheetName "VM HDs" -Style $VMHDArrayStyle -ConditionalText $VMHDArrayConditionalText
     }
 
     # Error sheet
@@ -409,7 +418,7 @@ Else{
         $ErrorHeaderCount = Get-ColumnName ($ErrorArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
         $ErrorHeaderRow = "`$A`$1:`$$ErrorHeaderCount`$1"
         $ErrorArrayStyle = New-ExcelStyle -Range "'Errors'$ErrorHeaderRow" -HorizontalAlignment Center
-        $ErrorArray | Sort-Object "Host Name" | Export-Excel -Path $LogFile -FreezeTopRow -BoldTopRow -AutoSize -WorksheetName "Errors" -Style $ErrorArrayStyle
+        $ErrorArray | Sort-Object "Host Name" | Export-Excel @ExcelProps -WorksheetName "Errors" -Style $ErrorArrayStyle
     }
 #endregion
 }
