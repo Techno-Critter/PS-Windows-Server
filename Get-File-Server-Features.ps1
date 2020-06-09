@@ -267,7 +267,16 @@ Else {
     }
 
     ## Export to Excel
-    # File Servers worksheet
+    # Create Excel standard configuration properties
+    $ExcelProps = @{
+        Autosize = $true;
+        FreezeTopRow = $true;
+        BoldTopRow = $true;
+    }
+
+    $ExcelProps.Path = $LogFile
+
+# File Servers worksheet
     $ServerSheetLastRow = ($ServerFeatureArray | Measure-Object).Count + 1
     If($ServerSheetLastRow -gt 1){
         $ServerSheetHeaderCount = Get-ColumnName ($ServerFeatureArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
@@ -294,7 +303,7 @@ Else {
         $ServerFeatureCondText += New-ConditionalText -Range "'File Servers'!$SearchServiceColumn" -ConditionalType ContainsText "Installed" -ConditionalTextColor Green -BackgroundColor LightGreen
         $ServerFeatureCondText += New-ConditionalText -Range "'File Servers'!$DNSColumn" -ConditionalType ContainsText "Installed" -ConditionalTextColor Maroon -BackgroundColor Pink
 
-        $ServerFeatureArray | Sort-Object "Server" | Export-Excel -Path $LogFile -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "File Servers" -ConditionalText $ServerFeatureCondText -Style $ServerFeatureStyle
+        $ServerFeatureArray | Sort-Object "Server" | Export-Excel @ExcelProps -WorkSheetname "File Servers" -ConditionalText $ServerFeatureCondText -Style $ServerFeatureStyle
     }
 
     # Server Drives worksheet
@@ -326,7 +335,7 @@ Else {
         $DriveCondText += New-ConditionalText -Range "'Server Drives'!$DriveDedupColumn" -ConditionalType Expression "=AND(`$D2=TRUE,`$O2=TRUE)" -ConditionalTextColor Maroon -BackgroundColor Pink
         $DriveCondText += New-ConditionalText -Range "'Server Drives'!$DriveShadowColumn" -ConditionalType Expression "=AND(`$D2=FALSE,`$O2=FALSE)" -ConditionalTextColor Maroon -BackgroundColor Pink
 
-        $ServerDriveArray | Sort-Object "Server", "Drive" | Export-Excel -Path $LogFile -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "Server Drives" -ConditionalText $DriveCondText -Style $DriveStyle
+        $ServerDriveArray | Sort-Object "Server", "Drive" | Export-Excel @ExcelProps -WorkSheetname "Server Drives" -ConditionalText $DriveCondText -Style $DriveStyle
     }
 
     # Server Share worksheet
@@ -342,7 +351,7 @@ Else {
         $ServerSharesConditionalText = @()
         $ServerSharesConditionalText += New-ConditionalText -Range $SharesControlColumn -ConditionalType ContainsText "Deny" -ConditionalTextColor Maroon -BackgroundColor Pink
         
-        $ServerShareArray | Sort-Object "Server","Share Path","Account Name" | Export-Excel -Path $LogFile -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "Server Shares" -ConditionalText $ServerSharesConditionalText -Style $ServerSharesStyle
+        $ServerShareArray | Sort-Object "Server","Share Path","Account Name" | Export-Excel @ExcelProps -WorkSheetname "Server Shares" -ConditionalText $ServerSharesConditionalText -Style $ServerSharesStyle
     }
 
     # Errors worksheet
@@ -350,6 +359,6 @@ Else {
         $ErrorSheetHeaderCount = Get-ColumnName ($ErrorArray | Get-Member | Where-Object{$_.MemberType -match "NoteProperty"} | Measure-Object).Count
         $ErrorSheetHeaderRow = "`$A`$1:`$$ErrorSheetHeaderCount`$1"
         $ErrorStyle = New-ExcelStyle -Range "Errors!$ErrorSheetHeaderRow" -HorizontalAlignment Center
-        $ErrorArray | Export-Excel -Path $LogFile -AutoSize -FreezeTopRow -BoldTopRow -WorkSheetname "Errors" -Style $ErrorStyle
+        $ErrorArray | Export-Excel @ExcelProps -WorkSheetname "Errors" -Style $ErrorStyle
     }
 }
