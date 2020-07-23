@@ -41,7 +41,7 @@ ForEach($Server in $Servers){
         If($TestPath -eq $true){
             # Test registry key
             Try{
-                Invoke-Command -ComputerName $ServerName -ScriptBlock {Get-ItemProperty -Path $using:DesiredRegistryPath  | Select-Object -ExpandProperty $using:DesiredKey} -ErrorAction Stop | Out-Null
+                Invoke-Command -ComputerName $ServerName -ScriptBlock {Get-ItemProperty -Path $using:DesiredRegistryPath | Select-Object -ExpandProperty $using:DesiredKey} -ErrorAction Stop | Out-Null
                 $TestKey = $true
             }
             Catch{
@@ -50,15 +50,15 @@ ForEach($Server in $Servers){
 
             If($TestKey -eq $true){
                 # Check value of registry key
-                $CurrentValue = Invoke-Command -ComputerName $ServerName -ScriptBlock {(Get-ItemProperty -Path $using:DesiredRegistryPath  -Name $using:DesiredKey).$using:DesiredKey}
+                $CurrentValue = Invoke-Command -ComputerName $ServerName -ScriptBlock {(Get-ItemProperty -Path $using:DesiredRegistryPath -Name $using:DesiredKey).$using:DesiredKey}
 
                 If($CurrentValue -eq $DesiredValue){
                     # No changes necessary; abort
-                    Write-Output ("The registry key $DesiredKey on " + $ServerName + " is already set to " + $DesiredValue)
+                    Write-Output ("The registry key $DesiredKey on $ServerName is already set to $DesiredValue.")
                 }
                 Else{
                     # Change value of registry key
-                    Write-Output ("The registry key $DesiredKey on " + $ServerName + " will be changed from " + $CurrentValue + " to " + $DesiredValue + ".")
+                    Write-Output ("The registry key $DesiredKey on $ServerName will be changed from $CurrentValue to $DesiredValue.")
                     Try{
                         Invoke-Command -ComputerName $ServerName -ScriptBlock {
                             Set-ItemProperty -Path $using:DesiredRegistryPath  -Name $using:DesiredKey -Value $using:DesiredValue
@@ -73,7 +73,7 @@ ForEach($Server in $Servers){
             }
             Else{
                 # Create key and set value
-                Write-Output ("The registry key $DesiredKey will be created on " + $ServerName + ".")
+                Write-Output ("The registry key $DesiredKey will be created on $ServerName.")
                 Try{
                     Invoke-Command -ComputerName $ServerName -ScriptBlock {
                         New-ItemProperty -Path $using:DesiredRegistryPath  -Name $using:DesiredKey -Value $using:DesiredValue
@@ -87,11 +87,11 @@ ForEach($Server in $Servers){
         }
         Else{
             # If registry path does not exist, abort
-            Write-Warning ("The registry path $DesiredRegistryPath does not exist on " + $ServerName + ".")
+            Write-Warning ("The registry path $DesiredRegistryPath does not exist on $ServerName.")
         }
     }
     Else{
         # If server does not respond, abort
-        Write-Warning ("The server " + $ServerName + " is not online.")
+        Write-Warning ("The server $ServerName is not online.")
     }
 }
