@@ -10,4 +10,5 @@
     <li>Hyper-V
     <li>DFS-R Schedules
     <li>Scheduled tasks
+    <li>PowerShell user profile
   </ul>
