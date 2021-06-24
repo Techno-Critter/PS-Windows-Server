@@ -32,6 +32,9 @@ F = Full; no throttle
 # Specify domain to gather DFSR groups from
 $Domain = "acme.com"
 
+# Specigy group to gather DFSR schedule from; use * for all groups
+$GroupName = "*"
+
 # Custom built schedule to check against; Weekends: no throttle, weekdays: 6am-6pm 256Kbps, 6pm-6am no throttle
 $CustomSchedule = (("F"*120) + (("4"*48) + ("F"*48))*5 + ("F"*72))
 
@@ -49,7 +52,7 @@ $TimeMarker = (("|" + " "*3 + "1" + " "*7 + "3" + " "*7 + "5" + " "*7 + "7" + " 
 $HourMarker = ("|   "*24)
 
 # Get DFSR Groups and schedules
-$Groups = Get-DfsReplicationGroup -GroupName * -DomainName $Domain | Sort-Object GroupName
+$Groups = Get-DfsReplicationGroup -GroupName $GroupName -DomainName $Domain | Sort-Object GroupName
 ForEach($Group in $Groups){
     $GroupSchedule = Get-DfsrGroupSchedule -GroupName $Group.GroupName
     Switch($GroupSchedule.BandwidthDetail){
