@@ -179,7 +179,6 @@ Else{
         }
     }
 
-
 # Create error worksheet and add to Excel workbook if necessary
     If($Errors){
         Invoke-ExcelOutput -WorksheetData $Errors -WorksheetName "Errors" -WorkbookName $LogFile
