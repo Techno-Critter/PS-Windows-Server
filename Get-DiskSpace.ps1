@@ -51,7 +51,7 @@ If(Test-Connection $Computer -Quiet){
         Else{
             $SysDrive = $false
         }
-        $DriveList += $Drive | Select DeviceID, VolumeName,
+        $DriveList += $Drive | Select-Object DeviceID, VolumeName,
             @{Name = 'DriveSize'; Expression = {(Get-DataSize $_.Size)}},
             @{Name = 'FreeSpace'; Expression = {(Get-DataSize $_.FreeSpace)}},
             @{Name = 'PercentFree'; Expression = {("{0:P2}" -f ($_.FreeSpace/$_.Size))}},
