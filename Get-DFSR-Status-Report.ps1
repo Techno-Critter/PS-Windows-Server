@@ -100,6 +100,7 @@ Function Invoke-ExcelOutput{
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
+        [DfsrInfo[]]
         $WorksheetData,
         [Parameter(Mandatory = $true)]
         [string]
