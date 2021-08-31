@@ -9,6 +9,8 @@ Lists DFSR folders and status on specified servers and outputs to Excel
 
 ## Functions and script prep
 # Configure variables
+$RepServers = @()
+$Errors = @()
 $Date = Get-Date -Format yyyyMMdd
 $LogFile = "C:\DFS\DFS_Report_$Date.xlsx"
 $RepServers =  "ServerFS01","ServerFS02"
@@ -98,7 +100,6 @@ Function Invoke-ExcelOutput{
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [DfsrInfo]
         $WorksheetData,
         [Parameter(Mandatory = $true)]
         [string]
@@ -115,9 +116,14 @@ Function Invoke-ExcelOutput{
     $ExcelProps.Path = $WorkbookName
     $DataLastRow = ($WorksheetData | Measure-Object).Count + 1
     If($DataLastRow -gt 1){
+        $DataConditionalText = @()
         $DataHeaderCount = Get-ColumnName ($WorksheetData | Get-Member | Where-Object{$_.MemberType -match "Property"} | Measure-Object).Count
-        $DataHeaderRow = "'Clusters'!`$A`$1:`$$DataHeaderCount`$1"
+        $DataHeaderRow = "`$$WorksheetName!`$A`$1:`$$DataHeaderCount`$1"
+        $StateRange = "`$$WorksheetName!`$G`$2:`$G`$$DataLastRow"
         $DataStyle = New-ExcelStyle -Range $DataHeaderRow -HorizontalAlignment Center
+        $DataConditionalText += New-ConditionalText -Range $StateRange -ConditionalType ContainsText "Unknown" -ConditionalTextColor Maroon -BackgroundColor Pink
+        $DataConditionalText += New-ConditionalText -Range $StateRange -ConditionalType ContainsText "In Error" -ConditionalTextColor Maroon -BackgroundColor Pink
+        $DataConditionalText += New-ConditionalText -Range $StateRange -ConditionalType ContainsText "Auto Recovery" -ConditionalTextColor Brown -BackgroundColor Wheat
         $WorksheetData | Export-Excel @ExcelProps -WorkSheetname $WorksheetName -Style $DataStyle
     }
 }
@@ -131,8 +137,6 @@ $DFSRStatus = @{
     [byte]4="Normal";
     [byte]5="In Error"
 }
-
-$Errors = @()
 
 ## Script below
 If(Test-Path $LogFile){
@@ -159,6 +163,13 @@ Else{
                     $DfsFldr = $null
                     $DfsFldr = $DfsFldrs | Where-Object{$_.ReplicationGroupName -eq $DfsrGroup.GroupName}
 
+                    If($DfsFldr){
+                        $DFSRState = $DFSRStatus[$DfsFldr.State]
+                    }
+                    Else{
+                        $DFSRState = "Unknown"
+                    }
+
                     $DfsrInfo += [DfsrInfo]@{
                         "Server"        = $DfsrGroup.ComputerName
                         "GroupName"     = $DfsrGroup.GroupName
@@ -166,7 +177,7 @@ Else{
                         "ContentPath"   = $DfsrGroup.ContentPath
                         "PrimaryMember" = $DfsrGroup.PrimaryMember
                         "StagingQuota"  = Get-Size ($DfsrGroup.StagingPathQuotaInMB*1MB)
-                        "State"         = $DFSRStatus[$DfsFldr.State]
+                        "State"         = $DFSRState
                     }
                 }
                 Invoke-ExcelOutput -WorksheetData ($DfsrInfo | Sort-Object "GroupName") -WorksheetName $RepServer -WorkbookName $LogFile
