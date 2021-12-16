@@ -5,17 +5,19 @@ From PS window, type "notepad $PROFILE", insert contents, save, and close
 #>
 
 # Map drive
-$DriveLetters = @("H","O","S")
-$DrivePaths = @("\\fileserver\home\username","\\fileserver\operations","\\fileserver\share")
+$DriveMappings = @(
+    @{Letter="H";Path="\\fileserver\home\username"},
+    @{Letter="O";Path="\\fileserver\operations"},
+    @{Letter="S";Path="\\fileserver\share"}
+    )
 
-ForEach($DriveLetter in $DriveLetters){
-    $CurrentDrives = Get-PSDrive | Where-Object{$_.Name -eq $DriveLetter}
+ForEach($DriveMapping in $DriveMappings){
+    $CurrentDrives = Get-PSDrive | Where-Object{$_.Name -eq $DriveMapping.Letter}
     If($null -eq $CurrentDrives){
-        $ArrayIndex = [array]::indexof($DriveLetters,$DriveLetter)
-        New-PSDrive -Name $DriveLetter -Root $DrivePaths[$ArrayIndex] -Persist -PSProvider "FileSystem"
+        New-PSDrive -Name $DriveMapping.Letter -Root $DriveMapping.Path -Persist -PSProvider "FileSystem"
     }
     Else{
-        Write-Output "Drive $DriveLetter already in use."
+        Write-Output "Drive $($DriveMapping.Letter) already in use."
     }
 }
 
