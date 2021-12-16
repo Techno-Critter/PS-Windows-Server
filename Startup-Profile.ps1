@@ -5,9 +5,18 @@ From PS window, type "notepad $PROFILE", insert contents, save, and close
 #>
 
 # Map drive
-$CurrentDrives = Get-PSDrive | Where-Object{$_.Name -eq "H"}
-If($null -eq $CurrentDrives){
-	New-PSDrive -Name "H" -Root "\\fileserver\home\username" -Persist -PSProvider "FileSystem"
+$DriveLetters = @("H","O","S")
+$DrivePaths = @("\\fileserver\home\username","\\fileserver\operations","\\fileserver\share")
+
+ForEach($DriveLetter in $DriveLetters){
+    $CurrentDrives = Get-PSDrive | Where-Object{$_.Name -eq $DriveLetter}
+    If($null -eq $CurrentDrives){
+        $ArrayIndex = [array]::indexof($DriveLetters,$DriveLetter)
+        New-PSDrive -Name $DriveLetter -Root $DrivePaths[$ArrayIndex] -Persist -PSProvider "FileSystem"
+    }
+    Else{
+        Write-Output "Drive $DriveLetter already in use."
+    }
 }
 
 # Open  MMC programs
