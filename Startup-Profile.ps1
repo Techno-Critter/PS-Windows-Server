@@ -2,6 +2,7 @@
 Run specified programs and verifies network drive connectivity upon PS open
 Copy contents of this script into PS profile
 From PS window, type "notepad $PROFILE", insert contents, save, and close
+Remove or remark out any programs or consoles that are not needed; add as necessary
 #>
 
 # Map drive
@@ -59,8 +60,25 @@ If(($null -eq $MMCProcess) -or ("Hyper-V Manager" -notin $MMCProcess.MainWindowT
 	virtmgmt.msc
 }
 
+# Domains and Trusts
+If(($null -eq $MMCProcess) -or "Active Directory Domains and Trusts" -notin $MMCProcess.MainWindowTitle){
+	domain.msc
+}
+
 # VS Code
 $VSCodeProcess = Get-Process -Name "Code" -ErrorAction SilentlyContinue
 If($null -eq $VSCodeProcess){	
 	& "$ENV:PROGRAMFILES\Microsoft VS Code\bin\Code.cmd" "U:\Scripts\PowerShell"
+}
+
+# SCCM Console
+$SCCMProcess = Get-Process -Name "Microsoft.ConfigurationManagement" -ErrorAction SilentlyContinue
+If($null -eq $SCCMProcess){
+	& "${ENV:PROGRAMFILES(x86)}\Microsoft Endpoint Manager\AdminConsole\bin\Microsoft.ConfigurationManagement.exe"
+}
+
+# Volume Activation Tools
+$VATProcess = Get-Process -Name "Volume Activation Tools" -ErrorAction SilentlyContinue
+If($null -eq $VATProcess){
+	& "$ENV:WINDIR\system32\vmw.exe"
 }
