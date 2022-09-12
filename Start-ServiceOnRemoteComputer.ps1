@@ -1,7 +1,7 @@
 <#
 Author: Stan Crider
 Date: 12 Sept 2022
-Crap: starts and/or restrarts a specified service on specified computers
+Crap: starts and/or restarts a specified service on specified computers
 #>
 
 ## Variables
