@@ -10,6 +10,7 @@
     <li>Hyper-V
     <li>DFS-R Schedules
     <li>Scheduled tasks
+    <li>Create local user account on remote computers
     <li>Start/Restart service
     <li>PowerShell user profile
   </ul>
