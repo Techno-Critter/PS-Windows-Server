@@ -95,7 +95,7 @@ ForEach($Computer in $Computers){
                                 # Get membership of group
                                 $LocalGroupMembers = Get-LocalGroupMember -Group $using:LocalGroup
                                 # Add local user to group if not already a member
-                                $FullLocalUserName = ("" + (($using:Computer).Split(".")[0]) + "\" + $using:AccountName)
+                                $FullLocalUserName = ((($using:Computer).Split(".")[0]) + "\" + $using:AccountName)
                                 If($LocalGroupMembers.Name -contains $FullLocalUserName){
                                     Write-Warning ("The user " + $using:AccountName + " is already in the group " + $using:LocalGroup + " on computer " + $using:Computer + ".")
                                 }
