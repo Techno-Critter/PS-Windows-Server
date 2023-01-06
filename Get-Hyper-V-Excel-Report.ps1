@@ -164,7 +164,7 @@ ForEach($Server in $ServerList){
     }
 
     Try{
-        $HVRole = Invoke-Command -Session $PSSession -ScriptBlock {Get-WindowsFeature -Name Hyper-V} -ErrorAction Stop
+        $HVRole = Invoke-Command -Session $PSSession -ScriptBlock {Get-WindowsFeature -Name 'Hyper-V'} -ErrorAction Stop
     }
     Catch{
         $HVRole = $null
@@ -180,7 +180,7 @@ ForEach($Server in $ServerList){
     }
 
     Try{
-        $HVPSRole = Invoke-Command -Session $PSSession -ScriptBlock {Get-WindowsFeature -Name Hyper-V-PowerShell} -ErrorAction Stop
+        $HVPSRole = Invoke-Command -Session $PSSession -ScriptBlock {Get-WindowsFeature -Name 'Hyper-V-PowerShell'} -ErrorAction Stop
     }
     Catch{
         $HVPSRole = $null
