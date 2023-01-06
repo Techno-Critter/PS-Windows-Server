@@ -20,7 +20,7 @@ Errors: Report unresponsive or in-error hosts
 #region User specified variables
 # Create Excel filename based on date
 $DateName = Get-Date -Format yyyyMMdd
-$LogFile = "\\ent-fileshare.ara.com\IT\LANManagers\LANMgr Dropbox\Stan Crider\Logs\HyperV\HyperV Report $DateName.xlsx"
+$LogFile = "C:\HyperV\HyperV Report $DateName.xlsx"
 
 # Call AD and search for computers
 $DomainName = "acme.com"
