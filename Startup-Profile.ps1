@@ -23,7 +23,12 @@ ForEach($DriveMapping in $DriveMappings){
 }
 
 # Open  MMC programs
-$MMCProcess = Get-Process -Name "MMC" | Select-Object *
+Try{
+    	$MMCProcess = Get-Process -Name "MMC" -ErrorAction Stop | Select-Object *
+}
+Catch{
+	$MMCProcess = $null
+ }
 
 # DFS
 If(($null -eq $MMCProcess) -or ("DFS Management" -notin $MMCProcess.MainWindowTitle)){
